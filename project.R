@@ -116,3 +116,4 @@ x2_star = (nhanes1$RIDAGEYR-50)*x2
 pw.bp.model <- lm(BPXODI ~ RIDAGEYR + x2_star, data = nhanes1)
 summary(pw.bp.model)
 summary(bp.model2)
+#how about now?
