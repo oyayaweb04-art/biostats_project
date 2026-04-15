@@ -10,6 +10,7 @@ install.packages("haven")
 library(haven)
 library(ggplot2)
 
+
 ##1
 #blood pressure taken BEFORE COVID
 file_path <- "C:/Users/oyaya/Downloads/NHANES_data/bp_2017.xpt"
@@ -23,8 +24,6 @@ file_path1 <- "C:/Users/oyaya/Downloads/NHANES_data/bp_2021.xpt"
 after_bp <- read_xpt(file_path1)
 summary(after_bp)
 View(after_bp)
-
-
 
 
 ##3 (setup)
@@ -48,34 +47,83 @@ before_bp <- before_bp |>
   mutate(BPXOSY = (BPXOSY1+BPXOSY2+BPXOSY3)/3, .before = BPXOSY1)
 
 #are the di bp different or same?
+#xb = mean before
+#xa = mea after
+#s = systolic
+#d = diastolic
+
+#H0: xbd = xad
+#HA: xbd != xad  /  xbd < xad
 t.test(before_bp$BPXODI, after_bp$BPXODI, var.equal = FALSE)
 t.test(before_bp$BPXODI, after_bp$BPXODI, alternative = "less", var.equal = FALSE)
-#ok, so the x is less than y significantly woohoo!
+#ok, so the before is less than after significantly woohoo! p = 0.0002751
 
+
+#H0: xbs = xas
+#HA: xbs != xas  /  xbs > xas
 t.test(before_bp$BPXOSY, after_bp$BPXOSY, var.equal = FALSE)
 t.test(before_bp$BPXOSY, after_bp$BPXOSY, alternative = "greater", var.equal = FALSE)
-#ok, so x is greater than y significantly woohoo!
+#ok, so before is greater than after significantly woohoo! p = 0.006172
+
+
+t.test(before_bp$BPXOSY)
+#95% confidence: [119.4326, 120.1818]
+#this means that if we were to take many more samples with sample size n, then 95% of the calculated CIs will cover or capture the true mean  of this population.
+
+
+t.test(after_bp$BPXOSY)
+#95% confidence: [118.6871, 119.5082]
+#this means that if we were to take many more samples with sample size n, then 95% of the calculated CIs will cover or capture the true mean  of this population.
+
+
+t.test(before_bp$BPXODI)
+#95% confidence: [71.37614, 71.84070]
+#this means that if we were to take many more samples with sample size n, then 95% of the calculated CIs will cover or capture the true mean  of this population.
+
+
+t.test(after_bp$BPXODI)
+#95% confidence: [71.96296, 72.48243]
+#this means that if we were to take many more samples with sample size n, then 95% of the calculated CIs will cover or capture the true mean  of this population.
 
 
 
 
-#demographics of the people in the study BEFORE COVID
-dfile_path <- "C:/Users/oyaya/Downloads/NHANES_data/demo_2017.xpt"
-before_demo <- read_xpt(dfile_path)
-head(before_demo)
-View(before_demo)
+#look at before data
+hist(before_bp$BPXODI, nclass=500, main = "diastolic blood pressure before", xlab="diastolic bp")
+#pretty normal, but slightly skewed to the right (a lot of outliers)
+
+hist(before_bp$BPXOSY, nclass=500, main = "systolic blood pressure before", xlab="systolic bp")
+#more skewed to the right
+
+
+
+#look at after data
+
+hist(after_bp$BPXODI, nclass=500, main = "diastolic blood pressure after", xlab="diastolic bp")
+#more normally distributed
+
+hist(after_bp$BPXOSY, nclass=500, main = "systolic blood pressure after", xlab="systolic bp")
+#skewed to right
+
+#seems that both systolics are skewed to the right
+
+summary(after_bp$BPXODI)
+summary(after_bp$BPXOSY)
+
+
 
 #demographics of people in the study AFTER COVID
 dfile_path1 <- "C:/Users/oyaya/Downloads/NHANES_data/demo_2021.xpt"
 after_demo <- read_xpt(dfile_path1)
 View(after_demo)
 
-bd <- before_demo |>
+ad <- after_demo |>
   select(SEQN,RIDAGEYR,RIDRETH3,DMDEDUC2)
 
 #combine pre-COVID demographics and blood pressure into one
-nhanes1 <- inner_join(bd, bbp, by = 'SEQN')
+nhanes1 <- inner_join(ad, abp, by = 'SEQN')
 View(nhanes1)
+
 
 
 #take the average of the di and sy blood pressures
@@ -84,10 +132,13 @@ nhanes1 <- nhanes1 |>
   mutate(BPXOSY = (BPXOSY1+BPXOSY2+BPXOSY3)/3, .before = BPXOSY1)
 
 
+
 ##3
 #race vs dbp
 plot(nhanes1$RIDRETH3, nhanes1$BPXODI)
 #Mexican-American has the lowest dbp
+
+summary(nhanes1$RIDRETH3)
 
 #age vs dbp
 plot(nhanes1$RIDAGEYR, nhanes1$BPXODI)
@@ -96,24 +147,65 @@ plot(nhanes1$RIDAGEYR, nhanes1$BPXODI)
 #race vs sbp
 plot(nhanes1$RIDRETH3, nhanes1$BPXOSY)
 
+
 #age vs sbp
 plot(nhanes1$RIDAGEYR, nhanes1$BPXOSY)
+#linear??
 
 
 ##4
 bp.model <- lm(BPXODI ~ RIDAGEYR, data = nhanes1)
-bp.model
 summary(bp.model)
+#multiple R-sq = 0.09029
 
 bp.model1 <- lm(I(BPXODI^2) ~ RIDAGEYR, data = nhanes1)
 summary(bp.model1)
+#multiple R-sq = 0.08201
+
 
 bp.model2 <- lm(BPXODI ~ RIDAGEYR + I(RIDAGEYR^2), data = nhanes1)
 summary(bp.model2)
+#multiple R-sq = 0.2291
 
-x2 = as.numeric(nhanes1$RIDAGEYR>50)
-x2_star = (nhanes1$RIDAGEYR-50)*x2
+bp.model3 <- lm(BPXODI ~ RIDAGEYR + I(RIDAGEYR^2) + I(RIDAGEYR^3), data = nhanes1)
+summary(bp.model3)
+#multiple R-sq = 0.2291
+
+
+
+bp.model5 <- lm(BPXODI ~ RIDAGEYR + I(RIDAGEYR^2) + I(RIDAGEYR^3) + I(RIDAGEYR^4) + I(RIDAGEYR^5), data = nhanes1)
+summary(bp.model5)
+#multiple R-sq = 0.2298
+
+bp.model9 <- lm(BPXODI ~ RIDAGEYR + I(RIDAGEYR^2) + I(RIDAGEYR^3) + I(RIDAGEYR^4) + I(RIDAGEYR^5) + I(RIDAGEYR^6) + I(RIDAGEYR^7) + I(RIDAGEYR^8) + I(RIDAGEYR^9), data = nhanes1)
+summary(bp.model9)
+#multiple R-sq = 0.2301
+
+x2 = as.numeric(nhanes1$RIDAGEYR>48)
+x2_star = (nhanes1$RIDAGEYR-48)*x2
 pw.bp.model <- lm(BPXODI ~ RIDAGEYR + x2_star, data = nhanes1)
 summary(pw.bp.model)
-summary(bp.model2)
-#how about now?
+#multiple R-sq = 0.2258
+
+anova(bp.model5, bp.model9)
+
+nl_model1 = lm((BPXODI) ~ RIDAGEYR + I(RIDAGEYR^2), data = nhanes1)
+summary(nl_model1) #R-sq = 0.09588
+
+nl_model2 = lm(log(BPXODI) ~ RIDAGEYR + I(RIDAGEYR^2), data = nhanes1)
+summary(nl_model2)
+#R-sq (multiple) 0.2443
+#we'll use this one!
+
+#residual analysis
+
+plot(nhanes1$RIDAGEYR, nhanes1$BPXODI)
+
+length(nl_model1$residuals) #7478
+length(nl_model2$residuals) #7478
+#nhanes1 has 7801 observations. why are they different?
+nhanes2 <- nhanes1 |>
+  na.omit(RIDAGEYR)
+
+
+plot(nl_model2) #shows me residuals, qqplot

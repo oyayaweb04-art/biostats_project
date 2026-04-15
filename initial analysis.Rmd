@@ -1,0 +1,86 @@
+---
+title: "analysis"
+author: "Olivia Webster"
+date: "2026-01-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+#install.packages("haven")
+library(haven)
+library(ggplot2)
+
+##1
+#blood pressure taken BEFORE COVID
+file_path <- "C:/Users/oyaya/Downloads/NHANES_data/bp_2017.xpt"
+before_bp <- read_xpt(file_path)
+head(before_bp)
+View(before_bp)
+
+
+#bp of people in study AFTER COVID
+file_path1 <- "C:/Users/oyaya/Downloads/NHANES_data/bp_2021.xpt"
+after_bp <- read_xpt(file_path1)
+summary(after_bp)
+View(after_bp)
+```
+
+
+
+SETUP (filter data frames)
+
+```{r}
+##3 (setup)
+
+#only show these columns
+
+
+bbp <- before_bp |>
+  select(SEQN, BPXOSY1:BPXODI3)
+
+abp <- after_bp |>
+  select(SEQN, BPXOSY1:BPXODI3)
+
+
+after_bp <- after_bp |>
+  mutate(BPXODI = (BPXODI1+BPXODI2+BPXODI3)/3, .before = BPXOSY1) |>
+  mutate(BPXOSY = (BPXOSY1+BPXOSY2+BPXOSY3)/3, .before = BPXOSY1)
+
+before_bp <- before_bp |>
+  mutate(BPXODI = (BPXODI1+BPXODI2+BPXODI3)/3, .before = BPXOSY1) |>
+  mutate(BPXOSY = (BPXOSY1+BPXOSY2+BPXOSY3)/3, .before = BPXOSY1)
+
+```
+
+
+
+
+analyze blood pressure readings from 2017-March 2020 cycle
+```{r}
+
+#systolic analysis
+# sys bp of 130 and above means high blood pressure
+
+hist(before_bp$BPXOSY, nclass=500, main = "systolic blood pressure before", xlab="systolic bp")
+#also skewed to the right, more so than the diastolic
+summary(before_bp$BPXOSY)
+mean(before_bp$BPXOSY >= 130, na.rm = TRUE) * 100
+
+
+#diastolic analysis
+# dia bp of 80 and above means high blood pressure
+
+hist(before_bp$BPXODI, nclass=500, main = "diastolic blood pressure before", xlab="diastolic bp")
+#slightly skewed to the right
+summary(before_bp$BPXODI)
+mean(before_bp$BPXODI >= 80, na.rm = TRUE) * 100
+
+
+```
+
+```{r cars}
+summary(cars)
+```
+
