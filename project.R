@@ -128,6 +128,7 @@ View(nhanes1)
 
 #take the average of the di and sy blood pressures
 nhanes1 <- nhanes1 |>
+  #rename("Age in Years" = RIDAGEYR, Race = RIDRETH3, "Education Level" = DMDEDUC2) |>
   mutate(BPXODI = (BPXODI1+BPXODI2+BPXODI3)/3, .before = BPXOSY1) |>
   mutate(BPXOSY = (BPXOSY1+BPXOSY2+BPXOSY3)/3, .before = BPXOSY1)
 
@@ -201,11 +202,30 @@ summary(nl_model2)
 
 plot(nhanes1$RIDAGEYR, nhanes1$BPXODI)
 
+ggplot(nhanes1, aes(x = RIDAGEYR, y = log(BPXODI))) +
+  geom_point(alpha = 0.5) +
+  stat_smooth(method = "lm",
+              formula = y ~ x + I(x^2),
+              color = "blue",
+              se = TRUE) +
+  labs(title = "Quadratic Regression Fit",
+       x = "Age",
+       y = "log(BPXODI)")
+
 length(nl_model1$residuals) #7478
 length(nl_model2$residuals) #7478
-#nhanes1 has 7801 observations. why are they different?
-nhanes2 <- nhanes1 |>
-  na.omit(RIDAGEYR)
+#nhanes1 has 7801 observations. why are they different? remove NAs?
+
+nhanes1 <- nhanes1 |>
+  filter(!is.na(BPXODI))
+
+res <- nl_model2$residuals #got it!!
 
 
-plot(nl_model2) #shows me residuals, qqplot
+plot(fitted(nl_model2), res)
+
+qqnorm(res)
+qqline(res)
+
+
+
