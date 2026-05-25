@@ -5,10 +5,36 @@ date: "2026-01-24"
 output: html_document
 ---
 
+
+#INTRODUCTION
+thank you for being here!! this is my first project and I'm excited to show you!
+
+##The Data
+- This data is taken from the CDC National Health and Nutrition Examination Survery (https://wwwn.cdc.gov/nchs/nhanes/Default.aspx).
+- I took two Continuous Studies from NHANES, the "NHANES 08/2021-08/2023" study and the "NHANES 2017-March 2020 Pre-Pandemic Data" study
+    - **hereafter, the "NHANES 08/2021-08/2023" study will be referred as the "post-pandemic study", and the "NHANES 2017-March 2020 Pre-Pandemic Data" study will be referred to as the "pre-pandemic study".**
+- within the pre-pandemic study, I extracted one (1) dataset from the Examination Data, "Blood Pressure - Oscillometric Measurements", and two (2) datasets within the post-pandemic study: "Blood Pressure - Oscillometric Measurements" from the Examination Data, and "Demographic Variables and Sample Weights" from the Demographics Data.
+
+##The Process
+- after graduating from William & Mary in December 2025, I wanted to apply my statistical knowledge to something I was interested in, like health-related subjects.
+- In the beginning of planning to develop this project, I planned to answer 2 questions:
+1. whether blood pressure (diastolic/systolic) decreased/increased/stayed the same before vs after the COVID-19 pandemic; aka blood pressure decreased/increased/stayed the same in the pre-pandemic study vs the post-pandemic study
+2. if there is a relationship between the age/race/income/level of education of ADULT participants and their blood pressure reading.
+
+### The Realization/Pivot
+- I finished the t-tests and the age vs. diastolic bp in mid May, and was super happy with the results
+- But after reading about how NHANES is not a completely randomized study, but stratified and clustered, I realized that I was not able to accurately answer the two questions without learning how to statistically analyze studies like this.
+
+- with this in mind, I have decided to keep this version as an **exploratory, unweighted** analysis to practice only what I have learned in my statistical data analysis college courses, and once my knowledge about how to effectively analyze data sampled like this has expanded, I will develop a new version.
+
+
+#THE CODE (woo!)
+
+##Libraries and stuff
 ```{r setup, include=FALSE}
 
 library(tidyverse)
-#install.packages("haven")
+install.packages("haven")
 library(haven)
 library(ggplot2)
 
@@ -29,7 +55,7 @@ View(after_bp)
 
 
 
-SETUP (filter data frames)
+##SETUP for t-tests (filter data frames)
 
 ```{r}
 ##3 (setup)
@@ -57,30 +83,230 @@ before_bp <- before_bp |>
 
 
 
-analyze blood pressure readings from 2017-March 2020 cycle
+##analyze blood pressure readings from BOTH studies
+###graph each one
+
 ```{r}
 
-#systolic analysis
-# sys bp of 130 and above means high blood pressure
 
 hist(before_bp$BPXOSY, nclass=500, main = "systolic blood pressure before", xlab="systolic bp")
-#also skewed to the right, more so than the diastolic
-summary(before_bp$BPXOSY)
-mean(before_bp$BPXOSY >= 130, na.rm = TRUE) * 100
 
+hist(after_bp$BPXOSY, nclass=500, main = "systolic blood pressure after", xlab="systolic bp")
 
-#diastolic analysis
-# dia bp of 80 and above means high blood pressure
 
 hist(before_bp$BPXODI, nclass=500, main = "diastolic blood pressure before", xlab="diastolic bp")
-#slightly skewed to the right
-summary(before_bp$BPXODI)
-mean(before_bp$BPXODI >= 80, na.rm = TRUE) * 100
+
+hist(after_bp$BPXODI, nclass=500, main = "diastolic blood pressure after", xlab="diastolic bp")
 
 
 ```
 
-```{r cars}
-summary(cars)
+
+
+###now descriptive statistics (summary, and the percentage of participants with high levels)
+
+```{r}
+
+
+summary(before_bp$BPXOSY)
+mean(before_bp$BPXOSY >= 130, na.rm = TRUE) * 100
+
+
+summary(after_bp$BPXOSY)
+mean(after_bp$BPXOSY >= 130, na.rm = TRUE) * 100
+
+
+summary(before_bp$BPXODI)
+mean(before_bp$BPXODI >= 80, na.rm = TRUE) * 100
+
+summary(after_bp$BPXODI)
+mean(after_bp$BPXODI >= 80, na.rm = TRUE) * 100
+
+
+```
+
+
+##COMPARISONS
+###t-tests comparing before vs after systolic blood pressure
+
+Null hypothesis: mean(before) = mean(after)
+alternative hypothesis: mean(before) !=/>/< mean(after)
+```{r}
+
+t.test(before_bp$BPXOSY, after_bp$BPXOSY, var.equal = FALSE)
+t.test(before_bp$BPXOSY, after_bp$BPXOSY, alternative = "greater", var.equal = FALSE)
+
+t.test(before_bp$BPXOSY)
+
+t.test(after_bp$BPXOSY)
+
+```
+
+ok, so before is **greater than** after significantly woohoo! p = 0.006172
+
+
+95% confidence for before_bp: [119.4326, 120.1818]
+this means that if we were to take many more samples with sample size n, then 95% of the calculated CIs will cover or capture the true mean of this population.
+
+95% confidence for after_bp: [118.6871, 119.5082]
+this means that if we were to take many more samples with sample size n, then 95% of the calculated CIs will cover or capture the true mean of this population.
+
+
+###t-test comparing before vs. after diastolic blood pressure
+
+Null hypothesis: mean(before) = mean(after)
+alternative hypothesis: mean(before) !=/>/< mean(after)
+```{r}
+
+t.test(before_bp$BPXODI, after_bp$BPXODI, var.equal = FALSE)
+t.test(before_bp$BPXODI, after_bp$BPXODI, alternative = "less", var.equal = FALSE)
+
+t.test(before_bp$BPXODI)
+
+
+t.test(after_bp$BPXODI)
+
+
+```
+ok, so the before is **less than** after significantly woohoo! p = 0.0002751
+
+
+95% confidence of before_bp: [71.37614, 71.84070]
+this means that if we were to take many more samples with sample size n, then 95% of the calculated CIs will cover or capture the true mean  of this population.
+
+95% confidence: [71.96296, 72.48243]
+this means that if we were to take many more samples with sample size n, then 95% of the calculated CIs will cover or capture the true mean  of this population.
+
+
+## REGRESSION
+### Setup the demographics for the post-pandemic participants
+
+```{r, include=FALSE}
+dfile_path1 <- "C:/Users/oyaya/Downloads/NHANES_data/demo_2021.xpt"
+after_demo <- read_xpt(dfile_path1)
+View(after_demo)
+
+ad <- after_demo |>
+  select(SEQN,RIDAGEYR,RIDRETH3,DMDEDUC2)
+```
+
+
+
+### Combine demographics and blood pressure from the post-pandemic study to make it easier to analyze from one data frame 
+
+```{r}
+nhanes1 <- inner_join(ad, abp, by = 'SEQN')
+View(nhanes1)
+
+nhanes1 <- nhanes1 |>
+  mutate(BPXODI = (BPXODI1+BPXODI2+BPXODI3)/3, .before = BPXOSY1) |>
+  mutate(BPXOSY = (BPXOSY1+BPXOSY2+BPXOSY3)/3, .before = BPXOSY1)
+
+```
+
+
+
+
+### Plot Race vs Diastolic BP, Race vs Systolic BP, Age vs Diastolic BP, Age vs Systolic BP
+```{r}
+plot(nhanes1$RIDRETH3, nhanes1$BPXODI)
+#Mexican-American has the lowest dbp
+
+plot(nhanes1$RIDRETH3, nhanes1$BPXOSY)
+
+
+
+#age vs dbp
+plot(nhanes1$RIDAGEYR, nhanes1$BPXODI)
+#looks quadratic; peaks at 40-60yrs
+
+
+#age vs sbp
+plot(nhanes1$RIDAGEYR, nhanes1$BPXOSY)
+#linear??
+```
+
+
+
+### try MANY models
+```{r}
+bp.model <- lm(BPXODI ~ RIDAGEYR, data = nhanes1)
+summary(bp.model)
+#multiple R-sq = 0.09029
+
+bp.model1 <- lm(I(BPXODI^2) ~ RIDAGEYR, data = nhanes1)
+summary(bp.model1)
+#multiple R-sq = 0.08201
+
+
+bp.model2 <- lm(BPXODI ~ RIDAGEYR + I(RIDAGEYR^2), data = nhanes1)
+summary(bp.model2)
+#multiple R-sq = 0.2291
+
+bp.model3 <- lm(BPXODI ~ RIDAGEYR + I(RIDAGEYR^2) + I(RIDAGEYR^3), data = nhanes1)
+summary(bp.model3)
+#multiple R-sq = 0.2291
+
+
+
+bp.model5 <- lm(BPXODI ~ RIDAGEYR + I(RIDAGEYR^2) + I(RIDAGEYR^3) + I(RIDAGEYR^4) + I(RIDAGEYR^5), data = nhanes1)
+summary(bp.model5)
+#multiple R-sq = 0.2298
+
+bp.model9 <- lm(BPXODI ~ RIDAGEYR + I(RIDAGEYR^2) + I(RIDAGEYR^3) + I(RIDAGEYR^4) + I(RIDAGEYR^5) + I(RIDAGEYR^6) + I(RIDAGEYR^7) + I(RIDAGEYR^8) + I(RIDAGEYR^9), data = nhanes1)
+summary(bp.model9)
+#multiple R-sq = 0.2301
+
+x2 = as.numeric(nhanes1$RIDAGEYR>48)
+x2_star = (nhanes1$RIDAGEYR-48)*x2
+pw.bp.model <- lm(BPXODI ~ RIDAGEYR + x2_star, data = nhanes1)
+summary(pw.bp.model)
+#multiple R-sq = 0.2258
+
+anova(bp.model5, bp.model9)
+
+nl_model1 = lm((BPXODI) ~ RIDAGEYR + I(RIDAGEYR^2), data = nhanes1)
+summary(nl_model1) #R-sq = 0.09588
+
+nl_model2 = lm(log(BPXODI) ~ RIDAGEYR + I(RIDAGEYR^2), data = nhanes1)
+summary(nl_model2)
+#R-sq (multiple) 0.2443
+#we'll use this one!
+
+```
+We'll use the nl_model2
+
+
+###Remove NAs
+```{r}
+nhanes1 <- nhanes1 |>
+  filter(!is.na(BPXODI))
+```
+
+
+## PLOT MODEL AND DATA
+```{r}
+ggplot(nhanes1, aes(x = RIDAGEYR, y = log(BPXODI))) +
+  geom_point(alpha = 0.5) +
+  stat_smooth(method = "lm",
+              formula = y ~ x + I(x^2),
+              color = "blue",
+              se = TRUE) +
+  labs(title = "Quadratic Regression Fit",
+       x = "Age",
+       y = "log(BPXODI)")
+```
+
+
+## RESIDUAL ANALYSIS
+
+```{r}
+res <- nl_model2$residuals #got it!!
+
+
+plot(fitted(nl_model2), res)
+
+qqnorm(res)
+qqline(res)
 ```
 
